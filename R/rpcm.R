@@ -21,4 +21,5 @@ rpcm <- function(data, engine) {
   }
 
   # TODO prep for output
+  return(fit)
 }
