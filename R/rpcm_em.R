@@ -1,12 +1,59 @@
-# TODO hier den code einfuegen aus verhelst_kamphuis_2009_EM.R
-
 ## noch benoetigt (Code aus verhelst_kamphuis_2009_EM.R Funktion fit_gamma_counts fuer pars)
 ## fit Gamma distribution to count data as in V&K (2009)
-
+## fit Gamma distribution to count data as in V&K (2009)
+# Funktion wird in rpcm_em verwendet
+fit_gamma_counts <- function(x, freq = NULL, start = "moment",
+                             id_constant = 1,
+                             terminate = 1e-05){
+  n <- length(x)
+  if(is.null(freq)){
+    freq <- rep(1, length(x))
+  }
+  if(start[1] == "moment"){
+    my_mean <- weighted.mean(x, freq)
+    my_var <- sum(freq*((x-my_mean)^2))/(sum(freq)-1)
+    rate <- my_mean/(my_var*id_constant)
+    shape <- my_mean*rate
+  }else{
+    shape <- start[1]
+    rate <- start[2]
+  }
+  hess_rr <- hess_ss <- hess_rs <-
+    score_rate <- score_shape <- numeric(n)
+  oldpars <- pars <- c(shape, rate)
+  crit <- Inf
+  while(crit > terminate){
+    for(i in 1:n){
+      score_shape[i] <- log(rate/(id_constant + rate))
+      hess_ss[i] <- 0
+      if(x[i]>0){
+        score_shape[i] <- score_shape[i] +
+          sum(1/(shape + 0:(x[i]-1)))
+        hess_ss[i] <- - sum(1/(shape + 0:(x[i]-1))^2)
+      }
+    }
+    score_rate <- shape/rate - (x + shape)/(id_constant + rate)
+    hess_rr <- - shape/rate^2 + (x + shape)/(id_constant + rate)^2
+    hess_rs <- rep(1/rate - 1/(id_constant + rate), n)
+    scores <- c(sum(score_shape * freq),
+                sum(score_rate * freq))
+    hess <- matrix(c(sum(hess_ss * freq),
+                     sum(hess_rs * freq),
+                     sum(hess_rs * freq),
+                     sum(hess_rr * freq)),
+                   ncol = 2)
+    pars <- pars - as.numeric(solve(hess) %*% scores)
+    shape <- pars[1]
+    rate <- pars[2]
+    crit <- max(abs(pars - oldpars))
+    oldpars <- pars
+  }
+  pars
+}
 
 rpcm_em <- function(X,tau, max.iter = 1000, terminate = 1e-05, id_constant = 1,
                     verbose = TRUE){
-  fit_rpcm <- rpcm(X,tau, id_constant = id_constant)
+  fit_rpcm <- rpcm_cml(X,tau, id_constant = id_constant)
   n <- dim(X)[1]
   delta <- id_constant ## call that delta as in V&K (2009)
 

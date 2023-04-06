@@ -1,5 +1,11 @@
 # main model fitting function
-rpcm <- function(data, engine) {
+rpcm <- function(data, engine, time_limit = NULL,
+                 control = list(cml_id_constant = 1,
+                                glmer_control = glmerControl(),
+                                em_max_iter = 1000,
+                                em_terminate = 1e-05,
+                                em_verbose = FALSE)) {
+  # time_limit should be a vector as long as the number of items
 
   # TODO input checks
 
@@ -7,73 +13,34 @@ rpcm <- function(data, engine) {
 
 
 
+  # data preparation
 
-  # TODO data preparation
+  # number of items
+  M <- ncol(data)
 
-  # fuer em
-  ## fit Gamma distribution to count data as in V&K (2009)
-  # Funktion wird in rpcm_em verwendet
-  fit_gamma_counts <- function(x, freq = NULL, start = "moment",
-                               id_constant = 1,
-                               terminate = 1e-05){
-    n <- length(x)
-    if(is.null(freq)){
-      freq <- rep(1, length(x))
-    }
-    if(start[1] == "moment"){
-      my_mean <- weighted.mean(x, freq)
-      my_var <- sum(freq*((x-my_mean)^2))/(sum(freq)-1)
-      rate <- my_mean/(my_var*id_constant)
-      shape <- my_mean*rate
-    }else{
-      shape <- start[1]
-      rate <- start[2]
-    }
-    hess_rr <- hess_ss <- hess_rs <-
-      score_rate <- score_shape <- numeric(n)
-    oldpars <- pars <- c(shape, rate)
-    crit <- Inf
-    while(crit > terminate){
-      for(i in 1:n){
-        score_shape[i] <- log(rate/(id_constant + rate))
-        hess_ss[i] <- 0
-        if(x[i]>0){
-          score_shape[i] <- score_shape[i] +
-            sum(1/(shape + 0:(x[i]-1)))
-          hess_ss[i] <- - sum(1/(shape + 0:(x[i]-1))^2)
-        }
-      }
-      score_rate <- shape/rate - (x + shape)/(id_constant + rate)
-      hess_rr <- - shape/rate^2 + (x + shape)/(id_constant + rate)^2
-      hess_rs <- rep(1/rate - 1/(id_constant + rate), n)
-      scores <- c(sum(score_shape * freq),
-                  sum(score_rate * freq))
-      hess <- matrix(c(sum(hess_ss * freq),
-                       sum(hess_rs * freq),
-                       sum(hess_rs * freq),
-                       sum(hess_rr * freq)),
-                     ncol = 2)
-      pars <- pars - as.numeric(solve(hess) %*% scores)
-      shape <- pars[1]
-      rate <- pars[2]
-      crit <- max(abs(pars - oldpars))
-      oldpars <- pars
-    }
-    pars
+  if (is.null(time_limit)) {
+    time_limit <- rep(1,M)
   }
 
   # fuer glmer
   # convert data from wide format to long format
-  # TO DO Variablennamen anpassen
-  ctl <- reshape(ct, varying = names(ct), v.names = "score",
-                 timevar = "subtest2", times = names(ct),
-                 idvar = "person", direction = "long")
-  ctl$unlimit <- ifelse(grepl("unlimit", ctl$subtest), "yes", "no") # make a neat variable to
-  # know which part has no time limit (yes = no time limit)
-  ctl$subtest <- gsub("ctestlimit", "", gsub("un", "", ctl$subtest2)) # make numerical variable
-  # for subtest
-  head(ctl) # first few lines: data merely reorganized
-  tail(ctl) # last few lines
+  # TODO Variablennamen anpassen
+  # TODO hier bitte einmal gucken wie die sachen benannt sein muessen
+  if (engine == "glmer") {
+    data$id <- rownames(data)
+    data_long <- reshape(data, varying = names(data),
+                         v.names = "score",
+                          timevar = "subtest2", times = names(ct),
+                          idvar = "id", direction = "long")
+    # FIXME: wir muessten hier dafuer sorgen dass die spalte mit den item-namen
+    # dann bitte "item" heisst - ich weiss bei reshape nur leider nie, welches
+    # der argumente das ist @Loreen: Hast du da ne idee?
+    # TODO time_limit Werte einsetzen so dass fuer jeden item-eintrag in
+    # data_long das korresponiderende time limit des Items dran ist.
+    # am besten direkt das logarithmierte time limit einsetzen, bitte
+    # log_time_limit nennen
+  }
+
 
 
   # TODO data checks
@@ -90,21 +57,40 @@ rpcm <- function(data, engine) {
   # timelimit = Vektor fuer timelimit pro Item (fit2)
   # subset2
 
-
-
-  # TODO ueber das engine argument geben wir hier dann die verschiedenen
-  # fitting optionen hinein
+  # model fit
   if (engine == "cml") {
-    # TODO hier code einfuegen um das modell mit rpcm_cml zu fitten
-    fit <- rpcm_cml()# TODO
+    fit <- rpcm_cml(
+      X = data,
+      tau = time_limit,
+      id_constant = control$cml_id_constant)
   } else if (engine == "glmer") {
-    # TODO hier code einfuegen um das modell mit rpcm_glmer zu fitten
-    fit <- rpcm_glmer() # TODO
+    fit <- rpcm_glmer() # TODO argumente einfuegen
   } else if (engine == "em") {
-    # TODO hier code einfuegen um das modell mit rpcm_em zu fitten
-    fit <- rpcm_em()
+    fit <- rpcm_em(
+      X = data,
+      tau = time_limit,
+      max.iter = control$em_max_iter,
+      terminate = control$em_terminate,
+      id_constant = control$cml_id_constant,
+      verbose = control$em_verbose)
   }
 
-  # TODO prep for output
-  return(fit)
+  # TODO prep for output: ich denke am besten eine liste mit den elementen wie unten
+  # angeregt, die muessten jeweils aus dem jeweiligen fit objekt noch herausgezogen werden
+  # bitte - das ist schoener, wenn wir das hier so clean herausgeben und einheitlich,
+  # egal welchen engine wir verwenden
+  out <- list(
+    engine = engine,
+    time_limit = time_limit
+    # TODO weiter hinzufuegen, wir brauchten:
+    # item_params: das sind die fixed effects aus glmer und die sigmas aus
+    # inference: hier bitte eine Tabelle aus Standardfehlern, Teststatistiken und p-Werten
+    # das haben wir autoamtisch fuer glmer, bei den anderen beiden koennen wir hier erstmal NA
+    # outoutten und muessen dann noch mal igrendwann ueberlegen, wie wir das da am besten bekommen
+    # estimation: hier ruhig als liste einfach als output was die jeweiligen engines an output
+    # ueber den estimation prozess geben, vielelicht auch als vereinheitlichte subliste - so wie du
+    # meinst, dass es besser ist. so was wie zb konvergenz, die anzahl der em iterationen bei em, etc.
+  )
+  class(out) <- "rpcmfit"
+  return(out)
 }

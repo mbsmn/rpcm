@@ -1,4 +1,3 @@
-# TODO hierein kommt der code aus rpcm.R
 rpcm_cml <- function(X, tau, id_constant = 1){
   X <- as.matrix(X)
   I <- ncol(X)
