@@ -17,6 +17,8 @@ rpcm <- function(data, engine, time_limit = NULL,
 
   # number of items
   M <- ncol(data)
+  #number of persons
+  N <- nrow(data)
 
   if (is.null(time_limit)) {
     time_limit <- rep(1,M)
@@ -30,15 +32,15 @@ rpcm <- function(data, engine, time_limit = NULL,
     data$id <- rownames(data)
     data_long <- reshape(data, varying = names(data),
                          v.names = "score",
-                          timevar = "subtest2", times = names(ct),
+                          timevar = "item", times = names(data),
                           idvar = "id", direction = "long")
-    # FIXME: wir muessten hier dafuer sorgen dass die spalte mit den item-namen
-    # dann bitte "item" heisst - ich weiss bei reshape nur leider nie, welches
-    # der argumente das ist @Loreen: Hast du da ne idee?
-    # TODO time_limit Werte einsetzen so dass fuer jeden item-eintrag in
-    # data_long das korresponiderende time limit des Items dran ist.
-    # am besten direkt das logarithmierte time limit einsetzen, bitte
-    # log_time_limit nennen
+    #add log_time_limit
+   log_time_limit <- rep(log(time_limit), each = N)
+   data_long <-  cbind(data_long, log_time_limit)
+
+   # To do: Ist Item Faktor -> as.factor(items)
+   #Wenn item nur Nummer des Items enthalten soll, muss times
+   #rausgenommen werden
   }
 
 
