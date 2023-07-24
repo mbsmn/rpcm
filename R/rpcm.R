@@ -29,18 +29,19 @@ rpcm <- function(data, engine, time_limit = NULL,
   # TODO Variablennamen anpassen
   # TODO hier bitte einmal gucken wie die sachen benannt sein muessen
   if (engine == "glmer") {
-    data$id <- rownames(data)
+    #data$id <- rownames(data)
     data_long <- reshape(data, varying = names(data),
                          v.names = "score",
-                          timevar = "item", times = names(data),
-                          idvar = "id", direction = "long")
+                          timevar = "item",
+                         #times = names(data),
+                          #idvar = "id",
+                         direction = "long")
     #add log_time_limit
    log_time_limit <- rep(log(time_limit), each = N)
    data_long <-  cbind(data_long, log_time_limit)
-
-   # To do: Ist Item Faktor -> as.factor(items)
-   #Wenn item nur Nummer des Items enthalten soll, muss times
-   #rausgenommen werden
+   #names(data_long) <- c("item", "score", "id","log_time_limit")
+   # Items als Faktoren?
+   data_long$item <- as.factor(data_long$item)
   }
 
 

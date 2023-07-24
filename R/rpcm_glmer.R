@@ -1,10 +1,12 @@
 
-# convert data from wide format to long format
-# lme4 Paket benoetigt
-rpcm_glmer <- function(data_long) { # TODO noch die Argument einfuegen
 
-  # TODO wir bruachen: include_offset; das ist TRUE wenn wir einen offset drin haben wollen,
-  # sonst FALSE - vgl. E-Mail
+# lme4 Paket benoetigt
+
+#LS: Ich habe include_offset in der Funktion bestimmt. Dann benoetigt die rpcm_gmer
+# Funktion keine weiteren Argumente, oder?
+rpcm_glmer <- function(data_long) {
+
+  include_offset <- ifelse((sum(data_long$log_time_limit) == 0),  FALSE,  TRUE )
 
   if(include_offset) {
     fit <- glmer(score ~ -1 + (1|id) + item,
@@ -13,7 +15,7 @@ rpcm_glmer <- function(data_long) { # TODO noch die Argument einfuegen
                   offset = log_time_limit)
 
   } else {
-    fit <- glmer(core ~ -1 + (1|id) + item,
+    fit <- glmer(score ~ -1 + (1|id) + item,
                  data = data_long,
                  family = poisson)
   }
