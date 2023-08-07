@@ -67,7 +67,7 @@ rpcm <- function(data, engine, time_limit = NULL,
       tau = time_limit,
       id_constant = control$cml_id_constant)
   } else if (engine == "glmer") {
-    fit <- rpcm_glmer() # TODO argumente einfuegen
+    fit <- rpcm_glmer(data_long = data_long)
   } else if (engine == "em") {
     fit <- rpcm_em(
       X = data,
@@ -82,6 +82,21 @@ rpcm <- function(data, engine, time_limit = NULL,
   # angeregt, die muessten jeweils aus dem jeweiligen fit objekt noch herausgezogen werden
   # bitte - das ist schoener, wenn wir das hier so clean herausgeben und einheitlich,
   # egal welchen engine wir verwenden
+
+  if (engine == "cml") {
+    item_params <- fit$sigma
+    inference <- NA
+    estimation <- data.frame(AIC = fit$AIC, BIC = fit$BIC)
+  } else if (engine == "glmer") {
+    item_params <- fixef(fit)
+  inference <- summary(fit)$coefficients
+  estimation <- summary(fit)$AICtab      #richtig?
+  } else if (engine == "em") {
+
+  }
+
+
+
   out <- list(
     engine = engine,
     time_limit = time_limit
