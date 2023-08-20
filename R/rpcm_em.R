@@ -18,8 +18,7 @@ fit_gamma_counts <- function(x, freq = NULL, start = "moment",
     shape <- start[1]
     rate <- start[2]
   }
-  hess_rr <- hess_ss <- hess_rs <-
-    score_rate <- score_shape <- numeric(n)
+  hess_rr <- hess_ss <- hess_rs <- score_rate <- score_shape <- numeric(n)
   oldpars <- pars <- c(shape, rate)
   crit <- Inf
   while(crit > terminate){
@@ -127,6 +126,6 @@ rpcm_em <- function(X,tau, max.iter = 1000, terminate = 1e-05, id_constant = 1,
 
   if(crit > terminate){warning("Reached maximum number of iterations. Consider increasing max.iter.")}
 
-  list(fit_rpcm = fit_rpcm,
-       pars = pars, terminat = terminate, max.iter = max.iter, crit = crit, ll = ll)
+  return(list(fit_rpcm = fit_rpcm,
+       pars = pars, terminat = terminate, max.iter = max.iter, crit = crit, ll = ll))
 }
