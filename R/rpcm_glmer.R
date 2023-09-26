@@ -2,7 +2,7 @@
 
 # lme4 Paket benoetigt
 
-#LS: Ich habe include_offset in der Funktion bestimmt. Dann benoetigt die rpcm_gmer
+#@Marie: Ich habe include_offset in der Funktion bestimmt. Dann benoetigt die rpcm_gmer
 # Funktion keine weiteren Argumente, oder?
 rpcm_glmer <- function(data_long) {
 

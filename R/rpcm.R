@@ -6,13 +6,25 @@ rpcm <- function(data, engine, time_limit = NULL,
                                 em_terminate = 1e-05,
                                 em_verbose = FALSE)) {
   # time_limit should be a vector as long as the number of items
+  if(!is.null(time_limit) & (length(time_limit) != ncol(data))){
+    stop("time_limit should be a vector as long as the number of items")
+  }
 
   # TODO input checks
 
+  # data
+  if(is.null(data)){
+    warning("data must be specified")
+  }
+
   # count data
-
-
-
+# from R Documentation of integer
+  is.wholenumber <- function(x, tol = .Machine$double.eps^0.5){abs(x - round(x)) < tol}
+  for(i in 1:ncol(data)){
+  if(sum(!is.wholenumber(data[,i])) > 0){
+    stop("item responses should be count data")
+  }
+  }
   # data preparation
 
   # number of items
@@ -26,8 +38,7 @@ rpcm <- function(data, engine, time_limit = NULL,
 
   # fuer glmer
   # convert data from wide format to long format
-  # TODO Variablennamen anpassen
-  # TODO hier bitte einmal gucken wie die sachen benannt sein muessen
+
   if (engine == "glmer") {
     #data$id <- rownames(data)
     data_long <- reshape(data, varying = names(data),
@@ -40,7 +51,6 @@ rpcm <- function(data, engine, time_limit = NULL,
    log_time_limit <- rep(log(time_limit), each = N)
    data_long <-  cbind(data_long, log_time_limit)
    #names(data_long) <- c("item", "score", "id","log_time_limit")
-   # Items als Faktoren?
    data_long$item <- as.factor(data_long$item)
   }
 
@@ -50,10 +60,15 @@ rpcm <- function(data, engine, time_limit = NULL,
 
   # fuer cml und em
   # X und tau benoetigt
+  # X mit data ueberprueft, tau wird auf 1-Vektor gesetzt, wenn
+  # nicht vorhanden @Marie: soll hier für cml und em eine
+  # Warnung eingefuegt werden, dass der 1-Vektor verwendet wird?
 
   # fuer glmer
 
   # benoetigte Variablen (im Datensatz)
+  # @Marie: Ich glaube glmer benoetigt nur data_long
+
   # teilweise aus reshape der Datenvorverarbeitung
   # score
   # person = person ID
@@ -77,6 +92,7 @@ rpcm <- function(data, engine, time_limit = NULL,
       id_constant = control$cml_id_constant,
       verbose = control$em_verbose)
   }
+  #@Marie: rpcm_em gibt 0.5 (im code p <- .5, Zeile 80) aus. Ist das sinnvoll?
 
   # TODO prep for output: ich denke am besten eine liste mit den elementen wie unten
   # angeregt, die muessten jeweils aus dem jeweiligen fit objekt noch herausgezogen werden
@@ -86,20 +102,37 @@ rpcm <- function(data, engine, time_limit = NULL,
   if (engine == "cml") {
     item_params <- fit$sigma
     inference <- NA
-    estimation <- data.frame(AIC = fit$AIC, BIC = fit$BIC)
+    estimation <- list(fit$AIC,
+                       fit$BIC,
+                      fit$se.theta,
+                      fit$se.sigma,
+                      fit$chisq)
   } else if (engine == "glmer") {
     item_params <- fixef(fit)
   inference <- summary(fit)$coefficients
-  estimation <- summary(fit)$AICtab      #richtig?
+  estimation <- summary(fit)$AICtab      #@Marie: ist das richtig?
   } else if (engine == "em") {
-
+item_params <- fit$fit_rpcm$sigma
+inference <- NA
+estimation <- list(fit$fit_rpcm$AIC,
+                   fit$fit_rpcm$BIC,
+                   fit$fit_rpcm$se.theta,
+                   fit$fit_rpcm$se.sigma,
+                   fit$fit_rpcm$chisq ,
+                   fit$terminat,
+                   fit$max.iter,
+                   fit$crit,
+                   fit$ll)
   }
 
 
 
   out <- list(
     engine = engine,
-    time_limit = time_limit
+    time_limit = time_limit,
+    item_params = item_params,
+    inference = inference,
+    estimation = estimation
     # TODO weiter hinzufuegen, wir brauchten:
     # item_params: das sind die fixed effects aus glmer und die sigmas aus
     # inference: hier bitte eine Tabelle aus Standardfehlern, Teststatistiken und p-Werten
