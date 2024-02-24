@@ -1,3 +1,8 @@
+# load packages:
+library(tidyr)
+library(lme4)
+
+
 # main model fitting function
 rpcm <- function(data, engine, time_limit = NULL,
                  control = list(cml_id_constant = 1,
@@ -18,12 +23,12 @@ rpcm <- function(data, engine, time_limit = NULL,
   }
 
   # count data
-# from R Documentation of integer
+  # from R Documentation of integer
   is.wholenumber <- function(x, tol = .Machine$double.eps^0.5){abs(x - round(x)) < tol}
   for(i in 1:ncol(data)){
-  if(sum(!is.wholenumber(data[,i])) > 0){
-    stop("item responses should be count data")
-  }
+    if(sum(!is.wholenumber(data[,i])) > 0){
+      stop("item responses should be count data")
+    }
   }
   # data preparation
 
@@ -40,18 +45,25 @@ rpcm <- function(data, engine, time_limit = NULL,
   # convert data from wide format to long format
 
   if (engine == "glmer") {
+    #alte Version:
     #data$id <- rownames(data)
-    data_long <- reshape(data, varying = names(data),
-                         v.names = "score",
-                          timevar = "item",
-                         #times = names(data),
-                          #idvar = "id",
-                         direction = "long")
+    #data_long <- reshape(data, varying = names(data),
+    #                     v.names = "score",
+    #                      timevar = "item",
+    #                     #times = names(data),
+    #                      #idvar = "id",
+    #                     direction = "long")
+
+    #neue Version (nutzt package tidyr):
+    data_long <- pivot_longer(data, everything(), cols_vary = "slowest",
+                              values_to = "score")
+    #add id
+    id <- rep(1:N, M)
     #add log_time_limit
-   log_time_limit <- rep(log(time_limit), each = N)
-   data_long <-  cbind(data_long, log_time_limit)
-   #names(data_long) <- c("item", "score", "id","log_time_limit")
-   data_long$item <- as.factor(data_long$item)
+    log_time_limit <- rep(log(time_limit), each = N)
+    data_long <-  cbind(data_long, id, log_time_limit)
+    names(data_long) <- c("item", "score", "id","log_time_limit")
+    data_long$item <- as.factor(data_long$item)
   }
 
 
@@ -93,6 +105,7 @@ rpcm <- function(data, engine, time_limit = NULL,
       verbose = control$em_verbose)
   }
   #@Marie: rpcm_em gibt 0.5 (im code p <- .5, Zeile 80) aus. Ist das sinnvoll?
+  #hb: ich habe die Zeile mal auskommentiert
 
   # TODO prep for output: ich denke am besten eine liste mit den elementen wie unten
   # angeregt, die muessten jeweils aus dem jeweiligen fit objekt noch herausgezogen werden
@@ -104,25 +117,25 @@ rpcm <- function(data, engine, time_limit = NULL,
     inference <- NA
     estimation <- list(fit$AIC,
                        fit$BIC,
-                      fit$se.theta,
-                      fit$se.sigma,
-                      fit$chisq)
+                       fit$se.theta,
+                       fit$se.sigma,
+                       fit$chisq)
   } else if (engine == "glmer") {
     item_params <- fixef(fit)
-  inference <- summary(fit)$coefficients
-  estimation <- summary(fit)$AICtab      #@Marie: ist das richtig?
+    inference <- summary(fit)$coefficients
+    estimation <- summary(fit)$AICtab      #@Marie: ist das richtig?
   } else if (engine == "em") {
-item_params <- fit$fit_rpcm$sigma
-inference <- NA
-estimation <- list(fit$fit_rpcm$AIC,
-                   fit$fit_rpcm$BIC,
-                   fit$fit_rpcm$se.theta,
-                   fit$fit_rpcm$se.sigma,
-                   fit$fit_rpcm$chisq ,
-                   fit$terminat,
-                   fit$max.iter,
-                   fit$crit,
-                   fit$ll)
+    item_params <- fit$fit_rpcm$sigma
+    inference <- NA
+    estimation <- list(fit$fit_rpcm$AIC,
+                       fit$fit_rpcm$BIC,
+                       fit$fit_rpcm$se.theta,
+                       fit$fit_rpcm$se.sigma,
+                       fit$fit_rpcm$chisq ,
+                       fit$terminat,
+                       fit$max.iter,
+                       fit$crit,
+                       fit$ll)
   }
 
 

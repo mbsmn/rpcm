@@ -10,9 +10,9 @@ rpcm_glmer <- function(data_long) {
 
   if(include_offset) {
     fit <- glmer(score ~ -1 + (1|id) + item,
-                  data = data_long,
-                  family = poisson,
-                  offset = log_time_limit)
+                 data = data_long,
+                 family = poisson,
+                 offset = log_time_limit)
 
   } else {
     fit <- glmer(score ~ -1 + (1|id) + item,

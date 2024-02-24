@@ -50,9 +50,9 @@ fit_gamma_counts <- function(x, freq = NULL, start = "moment",
   pars
 }
 
-rpcm_em <- function(X,tau, max.iter = 1000, terminate = 1e-05, id_constant = 1,
+rpcm_em <- function(X, tau, max.iter = 1000, terminate = 1e-05, id_constant = 1,
                     verbose = TRUE){
-  fit_rpcm <- rpcm_cml(X,tau, id_constant = id_constant)
+  fit_rpcm <- rpcm_cml(X, tau, id_constant = id_constant)
   n <- dim(X)[1]
   delta <- id_constant ## call that delta as in V&K (2009)
 
@@ -77,7 +77,7 @@ rpcm_em <- function(X,tau, max.iter = 1000, terminate = 1e-05, id_constant = 1,
   shape2 <- 1.2 * gamma_pars[1]
   p <- .5
   #  p <- runif(1)
-  print(p)
+  #  print(p)
   pars <- oldpars <- c(p, shape1, rate1, shape2, rate2)
 
   niter <- 0
@@ -127,5 +127,5 @@ rpcm_em <- function(X,tau, max.iter = 1000, terminate = 1e-05, id_constant = 1,
   if(crit > terminate){warning("Reached maximum number of iterations. Consider increasing max.iter.")}
 
   return(list(fit_rpcm = fit_rpcm,
-       pars = pars, terminat = terminate, max.iter = max.iter, crit = crit, ll = ll))
+              pars = pars, terminat = terminate, max.iter = max.iter, crit = crit, ll = ll))
 }
