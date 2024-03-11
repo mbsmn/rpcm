@@ -15,7 +15,7 @@ rpcm <- function(data, engine, time_limit = NULL,
     stop("time_limit should be a vector as long as the number of items")
   }
 
-  # TODO input checks
+  ## input checks
 
   # data
   if(is.null(data)){
@@ -30,7 +30,24 @@ rpcm <- function(data, engine, time_limit = NULL,
       stop("item responses should be count data")
     }
   }
-  # data preparation
+
+  # data should be not negative
+  for(i in 1:ncol(data)){
+    if(any(data[,i]) < 0){
+      stop("item responses should not be negative")
+    }
+  }
+
+  # remove rows with missing data
+  for(i in 1:ncol(data)){
+    if(any(is.na(df[,i])) == TRUE){
+      data <- data[, -i]
+      warning("rows with missing values were removed")
+    }
+  }
+
+
+  ## data preparation
 
   # number of items
   M <- ncol(data)
@@ -45,16 +62,6 @@ rpcm <- function(data, engine, time_limit = NULL,
   # convert data from wide format to long format
 
   if (engine == "glmer") {
-    #alte Version:
-    #data$id <- rownames(data)
-    #data_long <- reshape(data, varying = names(data),
-    #                     v.names = "score",
-    #                      timevar = "item",
-    #                     #times = names(data),
-    #                      #idvar = "id",
-    #                     direction = "long")
-
-    #neue Version (nutzt package tidyr):
     data_long <- pivot_longer(data, everything(), cols_vary = "slowest",
                               values_to = "score")
     #add id
