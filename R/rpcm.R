@@ -73,10 +73,6 @@ rpcm <- function(data, engine, time_limit = NULL,
     data_long$item <- as.factor(data_long$item)
   }
 
-
-
-  # TODO data checks
-
   # fuer cml und em
   # X und tau benoetigt
   # X mit data ueberprueft, tau wird auf 1-Vektor gesetzt, wenn
@@ -104,15 +100,13 @@ rpcm <- function(data, engine, time_limit = NULL,
     fit <- rpcm_glmer(data_long = data_long)
   } else if (engine == "em") {
     fit <- rpcm_em(
-      X = data,
+      X = as.matrix(data),
       tau = time_limit,
       max.iter = control$em_max_iter,
       terminate = control$em_terminate,
       id_constant = control$cml_id_constant,
       verbose = control$em_verbose)
   }
-  #@Marie: rpcm_em gibt 0.5 (im code p <- .5, Zeile 80) aus. Ist das sinnvoll?
-  #hb: ich habe die Zeile mal auskommentiert
 
   # TODO prep for output: ich denke am besten eine liste mit den elementen wie unten
   # angeregt, die muessten jeweils aus dem jeweiligen fit objekt noch herausgezogen werden
