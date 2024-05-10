@@ -116,11 +116,16 @@ rpcm <- function(data, engine, time_limit = NULL,
   if (engine == "cml") {
     item_params <- fit$sigma
     inference <- NA
-    estimation <- list(fit$AIC,
-                       fit$BIC,
-                       fit$se.theta,
-                       fit$se.sigma,
-                       fit$chisq)
+    estimation <- list(AIC = fit$AIC,
+                       BIC = fit$BIC,
+                       se.theta = fit$se.theta,
+                       se.sigma = fit$se.sigma,
+                       chisq = fit$chisq,
+                       terminate = NA,
+                       niter = NA,
+                       max.iter = NA,
+                       crit = NA,
+                       ll = NA)
   } else if (engine == "glmer") {
     item_params <- fixef(fit)
     inference <- summary(fit)$coefficients
@@ -128,15 +133,16 @@ rpcm <- function(data, engine, time_limit = NULL,
   } else if (engine == "em") {
     item_params <- fit$fit_rpcm$sigma
     inference <- NA
-    estimation <- list(fit$fit_rpcm$AIC,
-                       fit$fit_rpcm$BIC,
-                       fit$fit_rpcm$se.theta,
-                       fit$fit_rpcm$se.sigma,
-                       fit$fit_rpcm$chisq ,
-                       fit$terminat,
-                       fit$max.iter,
-                       fit$crit,
-                       fit$ll)
+    estimation <- list(AIC = fit$fit_rpcm$AIC,
+                       BIC = fit$fit_rpcm$BIC,
+                       se.theta = fit$fit_rpcm$se.theta,
+                       se.sigma = fit$fit_rpcm$se.sigma,
+                       chisq = fit$fit_rpcm$chisq ,
+                       terminate = fit$terminat,
+                       niter = fit$niter,
+                       max.iter = fit$max.iter,
+                       crit = fit$crit,
+                       ll = fit$ll)
   }
 
 

@@ -2,7 +2,7 @@
 ## fit Gamma distribution to count data as in V&K (2009)
 ## fit Gamma distribution to count data as in V&K (2009)
 # Funktion wird in rpcm_em verwendet
-fit_gamma_counts <- function(x, freq = NULL, start = "moment",
+fit_gaemmma_counts <- function(x, freq = NULL, start = "moment",
                              id_constant = 1,
                              terminate = 1e-05){
   n <- length(x)
@@ -126,6 +126,9 @@ rpcm_em <- function(X, tau, max.iter = 1000, terminate = 1e-05, id_constant = 1,
 
   if(crit > terminate){warning("Reached maximum number of iterations. Consider increasing max.iter.")}
 
+  if(niter == max.iter){warning("Reached maximum number of iterations. Consider increasing max.iter.")}
+
   return(list(fit_rpcm = fit_rpcm,
-              pars = pars, terminat = terminate, max.iter = max.iter, crit = crit, ll = ll))
+              pars = pars, niter = niter,
+              terminat = terminate, max.iter = max.iter, crit = crit, ll = ll))
 }
