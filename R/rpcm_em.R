@@ -2,7 +2,7 @@
 ## fit Gamma distribution to count data as in V&K (2009)
 ## fit Gamma distribution to count data as in V&K (2009)
 # Funktion wird in rpcm_em verwendet
-fit_gaemmma_counts <- function(x, freq = NULL, start = "moment",
+fit_gamma_counts <- function(x, freq = NULL, start = "moment",
                              id_constant = 1,
                              terminate = 1e-05){
   n <- length(x)
