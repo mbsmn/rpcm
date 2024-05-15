@@ -21,7 +21,7 @@ summary.rpcmfit <- function(x) {
   if(x$engine == "cml"){
     AIC <- x$estimation$AIC
     BIC <- x$estimation$BIC
-    logLik <- x$estimation["logLik"]
+    logLik <- NA
     se.theta <- x$estimation$se.theta
     se.sigma <- x$estimation$se.sigma
     chisq <- x$estimation$chisq
@@ -62,8 +62,8 @@ summary.rpcmfit <- function(x) {
   }
 
   cat(paste0("\n", "Estimation:", "\n"))
-  cat(paste0("  ", "AIC: ", round(AIC), "\n"))
-  cat(paste0("  ", "BIC: ", round(BIC), "\n"))
+  cat(paste0("  ", "AIC: ", round(AIC, 6), "\n"))
+  cat(paste0("  ", "BIC: ", round(BIC, 6), "\n"))
   cat(paste0("  ", "Log Likelihood: ", round(logLik, 6), "\n"))
   cat(paste0("  ", "Deviance: ", round(deviance, 6), "\n"))
   cat(paste0("  ", "Degrees of freedom: ", round(df.resid, 6), "\n"))
