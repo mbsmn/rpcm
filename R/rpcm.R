@@ -120,12 +120,7 @@ rpcm <- function(data, engine, time_limit = NULL,
                        BIC = fit$BIC,
                        se.theta = fit$se.theta,
                        se.sigma = fit$se.sigma,
-                       chisq = fit$chisq,
-                       terminate = NA,
-                       niter = NA,
-                       max.iter = NA,
-                       crit = NA,
-                       ll = NA)
+                       chisq = fit$chisq)
   } else if (engine == "glmer") {
     item_params <- fixef(fit)
     inference <- summary(fit)$coefficients
